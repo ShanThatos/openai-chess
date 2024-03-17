@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Yay</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.11/dist/ext/json-enc.js"></script>
+</head>
+
+<body class="bg-slate-900 text-white">
+    <div class="flex flex-col items-center">
+        <span class="p-2">Game ID: {{ game_id }}</span>
+        <button class="bg-green-800 px-5 py-1.5 rounded text-lg hover:opacity-80 active:opacity-70" hx-get="/newgame"
+            hx-trigger="click" hx-swap="none">New Game</button>
+    </div>
+    <div class="mx-auto max-w-[60vh] py-2 px-5" hx-get="/render/board" hx-trigger="load, refreshBoard from:body"></div>
+    <div class="mx-auto max-w-[80vw] py-2 px-10" hx-get="/render/action"
+        hx-trigger="load, refreshAction from:body, waitingForTurn from:body delay:1s"></div>
+</body>
+
+</html>

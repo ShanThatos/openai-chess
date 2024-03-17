@@ -1,0 +1,26 @@
+{% macro moves(moves_list) %}
+<div class="flex flex-wrap justify-center items-center gap-3">
+    {% for move in moves_list %}
+    <button class="bg-indigo-900 px-3 py-1 rounded text-lg hover:opacity-80 active:opacity-70" hx-post="/move/san"
+        hx-trigger="click" hx-swap="none" hx-ext="json-enc" hx-vals='{"move": "{{ move }}"}'>
+        {{ move }}
+    </button>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro waiting() %}
+    <h1 class="text-4xl text-center">Waiting for opponent...</h1>
+{% endmacro %}
+
+{% macro gameOver(result) %}
+    <h1 class="text-4xl text-center">
+        {% if result == "draw" %}
+            It's a draw!
+        {% elif result == "white" %}
+            White wins!
+        {% elif result == "black" %}
+            Black wins!
+        {% endif %}
+    </h1>
+{% endmacro %}
