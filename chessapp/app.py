@@ -108,8 +108,9 @@ def render_board(game: Annotated[ChessGame, Depends(game_session)]):
 def render_action(
     game: Annotated[ChessGame, Depends(game_session)], tasks: BackgroundTasks
 ):
+    refreshBoard = {"HX-Trigger": "refreshBoard"}
     if game.is_over:
-        return HTMLResponse(render_macro("chess.html:gameOver", game.get_result()))
+        return HTMLResponse(render_macro("chess.html:gameOver", game.get_result()), headers=refreshBoard)
 
     if not game.is_player_turn():
         if not game.waiting:
@@ -118,8 +119,8 @@ def render_action(
             render_macro("chess.html:waiting"), headers={"HX-Trigger": "waitingForTurn"}
         )
 
-    moves = [game.board.san(move) for move in game.board.legal_moves]
     headers = {}
     if game.finished_ai_turn():
-        headers["HX-Trigger"] = "refreshBoard"
+        headers |= refreshBoard
+    moves = [game.board.san(move) for move in game.board.legal_moves]
     return HTMLResponse(render_macro("chess.html:moves", moves), headers=headers)

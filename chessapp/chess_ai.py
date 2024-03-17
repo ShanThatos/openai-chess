@@ -1,3 +1,4 @@
+import os
 import re
 
 from dotenv import load_dotenv
@@ -73,7 +74,7 @@ def get_ai_move(board: chess.Board):
     def ask_ai():
         return (
             client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo"),
                 messages=messages,
                 max_tokens=3000,
             )
