@@ -14,14 +14,16 @@ class ChessGame:
         self.__finished_ai_turn = False
     
     def run_ai_turn(self):
-        if self.waiting:
+        if self.waiting or self.is_player_turn():
             return
         self.waiting = True
-        if not self.is_player_turn():
+        try:
             move = get_ai_move(self.board)
             self.board.push(move)
             self.__finished_ai_turn = True
-        self.waiting = False
+            
+        except:
+            self.waiting = False
 
     def finished_ai_turn(self):
         if self.__finished_ai_turn:
