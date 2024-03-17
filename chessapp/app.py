@@ -44,23 +44,35 @@ def game_session(request: Request):
     return get_game(game_id)
 
 
-# @app.middleware("http")
-# async def require_game_id(request: Request, call_next):
-#     return await call_next(request)
-
-
 @app.get("/newgame")
 def new_game(request: Request):
     if (game_id := request.session.get("game_id", None)) and has_game(game_id):
         del app.state.games[game_id]
     game = create_game()
     request.session["game_id"] = game.id
-    return JSONResponse({"game_id": game.id}, headers={"HX-Refresh": "true"})
+    return JSONResponse(
+        {"game_id": game.id, "board": game.board.fen()}, headers={"HX-Refresh": "true"}
+    )
 
 
 @app.get("/board/fen")
 def get_board(game: Annotated[ChessGame, Depends(game_session)]):
     return {"board": game.board.fen()}
+
+
+@app.get("/status")
+def get_status(
+    game: Annotated[ChessGame, Depends(game_session)], tasks: BackgroundTasks
+):
+    if game.is_over:
+        return {"status": "finished", "result": game.get_result()}
+
+    if game.is_player_turn():
+        return {"status": "player_turn"}
+
+    if not game.waiting:
+        tasks.add_task(game.run_ai_turn)
+    return {"status": "ai_turn"}
 
 
 @app.post("/move/san")
@@ -73,7 +85,8 @@ def move(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid move")
     return JSONResponse(
-        {"board": game.board.fen()}, headers={"HX-Trigger": "refreshBoard, refreshAction"}
+        {"board": game.board.fen()},
+        headers={"HX-Trigger": "refreshBoard, refreshAction"},
     )
 
 
@@ -92,20 +105,21 @@ def render_board(game: Annotated[ChessGame, Depends(game_session)]):
 
 
 @app.get("/render/action")
-def render_action(game: Annotated[ChessGame, Depends(game_session)], tasks: BackgroundTasks):
+def render_action(
+    game: Annotated[ChessGame, Depends(game_session)], tasks: BackgroundTasks
+):
     if game.is_over:
         return HTMLResponse(render_macro("chess.html:gameOver", game.get_result()))
-    
+
     if not game.is_player_turn():
         if not game.waiting:
             tasks.add_task(game.run_ai_turn)
         return HTMLResponse(
             render_macro("chess.html:waiting"), headers={"HX-Trigger": "waitingForTurn"}
         )
-    
+
     moves = [game.board.san(move) for move in game.board.legal_moves]
     headers = {}
     if game.finished_ai_turn():
         headers["HX-Trigger"] = "refreshBoard"
     return HTMLResponse(render_macro("chess.html:moves", moves), headers=headers)
-
