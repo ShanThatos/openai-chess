@@ -21,6 +21,8 @@ class ChessGame:
             move = get_ai_move(self.board)
             self.board.push(move)
             self.__finished_ai_turn = True
+        except Exception as e:
+            print(e)
         finally:
             self.waiting = False
 
